@@ -15,7 +15,12 @@ program
   .option('-i, --issue', 'migrate issue')
   .option('-M, --milestone', 'migrate milestone')
   .option('-l, --label', 'migrate label', 'migrate label')
+  .option('-s, --start <n>', 'start', parseInt, 0)
+  .option('-e, --end <n>', 'end', parseInt, 99999)
   .parse(process.argv);
+
+var start = program.start;
+var end = program.end;
 
 var settings = null;
 try {
@@ -277,6 +282,10 @@ async function transferIssues(owner, repo, projectId) {
 
   // if a GitLab issue does not exist in GitHub repo, create it -- along with comments.
   for (let issue of issues) {
+    // TODO: get slice from issues instead of condition
+    if (issue.iid < start || issue.iid > end) {
+      continue
+    }
     // try to find a GitHub issue that already exists for this GitLab issue
     let ghIssue = ghIssues.find(i => i.title.trim() === issue.title.trim());
     if (!ghIssue) {
@@ -334,6 +343,10 @@ async function transferMergeRequests(owner, repo, projectId) {
   // if a GitLab merge request does not exist in GitHub repo, create it -- along
   // with comments
   for (let request of mergeRequests) {
+    // TODO: get slice from mergeRequests instead of condition
+    if (request.iid < start || request.iid > end) {
+      continue
+    }
     // Try to find a GitHub pull request that already exists for this GitLab
     // merge request
     let ghRequest = ghPullRequests.find(i => i.title.trim() === request.title.trim());
