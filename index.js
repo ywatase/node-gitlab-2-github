@@ -287,7 +287,7 @@ async function transferIssues(owner, repo, projectId) {
       continue
     }
     // try to find a GitHub issue that already exists for this GitLab issue
-    let ghIssue = ghIssues.find(i => i.title.trim() === issue.title.trim());
+    let ghIssue = ghIssues.find(i => i.title.trim() === issue.title.trim() + " - [glis:" + issue.iid + "]");
     if (!ghIssue) {
       console.log("Creating: " + issue.iid + " - " + issue.title);
       try {
@@ -334,6 +334,8 @@ async function transferMergeRequests(owner, repo, projectId) {
   // be empty)
   let ghPullRequests = await getAllGHPullRequests(settings.github.owner, settings.github.repo);
 
+  let ghIssues = await getAllGHIssues(settings.github.owner, settings.github.repo);
+
   console.log("Transferring " + mergeRequests.length.toString() + " merge requests");
 
   //
@@ -349,7 +351,11 @@ async function transferMergeRequests(owner, repo, projectId) {
     }
     // Try to find a GitHub pull request that already exists for this GitLab
     // merge request
-    let ghRequest = ghPullRequests.find(i => i.title.trim() === request.title.trim());
+    let ghRequest = ghPullRequests.find(i => i.title.trim() === request.title.trim() +"[glmr:" + request.iid + "]");
+    if (!ghRequest) {
+
+      ghRequest = ghIssues.find(i => i.title.trim() === request.title.trim() + " - [" + request.state + "][glmr:" + request.iid + "]");
+    }
     if (!ghRequest) {
       console.log("Creating pull request: !" + request.iid + " - " + request.title);
       try {
@@ -623,7 +629,7 @@ async function createPullRequest(owner, repo, pullRequest) {
     let props = {
       owner: owner,
       repo: repo,
-      title: pullRequest.title.trim(),
+      title: pullRequest.title.trim() +"[glmr:" + request.iid + "]",
       body: bodyConverted,
       head: pullRequest.source_branch,
       base: pullRequest.target_branch
@@ -640,7 +646,7 @@ async function createPullRequest(owner, repo, pullRequest) {
     let props = {
       owner: owner,
       repo: repo,
-      title: pullRequest.title.trim() + " - [" + pullRequest.state + "]",
+      title: pullRequest.title.trim() + " - [" + pullRequest.state + "][glmr:" + pullRequest.iid + "]",
       body: bodyConverted
     };
 
@@ -847,7 +853,7 @@ async function createIssue(owner, repo, milestones, issue) {
   let props = {
     owner: owner,
     repo: repo,
-    title: issue.title.trim(),
+    title: issue.title.trim() + " - [glis:" + issue.iid + "]",
     body: bodyConverted
   };
 
