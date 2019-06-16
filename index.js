@@ -558,7 +558,14 @@ async function createPullRequestAndComments(owner, repo, milestones, pullRequest
 async function createPullRequest(owner, repo, pullRequest) {
   let canCreate = true;
 
+  if(settings.mergeRequests.closedConvertIssue) {
+    if(pullRequest.state === "closed" || pullRequest.state === "merged") {
+      canCreate = false;
+    }
+  }
+
   // Check to see if the target branch exists in GitHub - if it does not exist, we cannot create a pull request
+  if(canCreate) {
   try {
     await github.repos.getBranch({
       owner: owner,
@@ -581,8 +588,10 @@ async function createPullRequest(owner, repo, pullRequest) {
     }
 
   }
+  }
 
   // Check to see if the source branch exists in GitHub - if it does not exist, we cannot create a pull request
+  if(canCreate) {
   try {
     await github.repos.getBranch({
       owner: owner,
@@ -602,6 +611,7 @@ async function createPullRequest(owner, repo, pullRequest) {
       console.error("Thus, cannot migrate merge request; creating an issue instead");
       canCreate = false;
     }
+  }
   }
 
   if(settings.debug) return Promise.resolve({data: pullRequest});
