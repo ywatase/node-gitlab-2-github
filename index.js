@@ -2,10 +2,20 @@ const GitHubApi = require('@octokit/rest')
 const Gitlab = require('gitlab').default
 const async = require('async');
 const fs = require('fs');
+const program = require('commander');
 
 const sleep = (milliseconds) => {
   return new Promise(resolve => setTimeout(resolve, milliseconds))
 }
+
+
+program
+  .version('0.1.0')
+  .option('-m, --mergerequest', 'migrate merge request')
+  .option('-i, --issue', 'migrate issue')
+  .option('-M, --milestone', 'migrate milestone')
+  .option('-l, --label', 'migrate label', 'migrate label')
+  .parse(process.argv);
 
 var settings = null;
 try {
@@ -102,19 +112,27 @@ async function migrate() {
   //
 
   // transfer GitLab milestones to GitHub
-  await transferMilestones(settings.gitlab.projectId);
+  if (program.milestone) {
+    await transferMilestones(settings.gitlab.projectId);
+  }
 
   // transfer GitLab labels to GitHub
-  await transferLabels(settings.gitlab.projectId, true, settings.conversion.useLowerCaseLabels);
+  if (program.label) {
+    await transferLabels(settings.gitlab.projectId, true, settings.conversion.useLowerCaseLabels);
+  }
 
   // Transfer issues with their comments; do this before transferring the merge requests
-  await transferIssues(settings.github.owner, settings.github.repo, settings.gitlab.projectId);
+  if (program.issue) {
+    await transferIssues(settings.github.owner, settings.github.repo, settings.gitlab.projectId);
+  }
 
-  if (settings.mergeRequests.log) {
-    // log merge requests
-    await logMergeRequests(settings.gitlab.projectId, settings.mergeRequests.logFile);
-  } else {
-    await transferMergeRequests(settings.github.owner, settings.github.repo, settings.gitlab.projectId);
+  if (program.mergerequest) {
+    if (settings.mergeRequests.log) {
+      // log merge requests
+      await logMergeRequests(settings.gitlab.projectId, settings.mergeRequests.logFile);
+    } else {
+      await transferMergeRequests(settings.github.owner, settings.github.repo, settings.gitlab.projectId);
+    }
   }
 
   console.log("\n\nTransfer complete!\n\n");
