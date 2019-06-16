@@ -1113,7 +1113,9 @@ function addMigrationLine(str, item) {
 
   var formattedDate = new Date(item.created_at).toLocaleString('en-US', dateformatOptions);
 
-  return "In GitLab by @" + item.author.username + " on " + formattedDate + "\n\n" + str;
+  var link = ('web_url' in item) ? ' [[origin](' + item.web_url + ')]' : ''
+
+  return "In Gitlab by @" + item.author.username + " on " + formattedDate + link + "\n\n" + str;
 }
 
 // ----------------------------------------------------------------------------
