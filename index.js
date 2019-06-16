@@ -289,6 +289,7 @@ async function transferIssues(owner, repo, projectId) {
       } catch (err) {
         console.error("Could not create issue: " + issue.iid + " - " + issue.title);
         console.error(err);
+        process.exit(1);
       }
     } else {
       console.log("Already exists: " + issue.iid + " - " + issue.title);
